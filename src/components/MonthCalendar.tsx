@@ -9,11 +9,12 @@ interface CalendarProps {
 }
 
 export default function MonthCalendar({ events, onSelectDate }: CalendarProps) {
-  const [selectedDay, setSelectedDay] = useState('2026-10-14');
+  const [selectedDay, setSelectedDay] = useState('2026-09-10');
 
-  const daysInMonth = Array.from({ length: 31 }, (_, i) => {
+  // 2026년 9월 일수 (30일)
+  const daysInMonth = Array.from({ length: 30 }, (_, i) => {
     const day = i + 1;
-    const dateStr = `2026-10-${day.toString().padStart(2, '0')}`;
+    const dateStr = `2026-09-${day.toString().padStart(2, '0')}`;
     return { day, dateStr };
   });
 
@@ -39,13 +40,14 @@ export default function MonthCalendar({ events, onSelectDate }: CalendarProps) {
   return (
     <div>
       <div className="flex justify-between items-center mb-4 px-2">
-        <span className="text-sm font-bold text-slate-800">&lt; 2026년 10월 &gt;</span>
+        <span className="text-sm font-bold text-slate-800">&lt; 2026년 9월 &gt;</span>
         <button
+          type="button"
           onClick={() => {
-            setSelectedDay('2026-10-14');
-            onSelectDate('2026-10-14');
+            setSelectedDay('2026-09-10');
+            onSelectDate('2026-09-10');
           }}
-          className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg font-medium"
+          className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg font-medium active:scale-95 transition-transform"
         >
           오늘
         </button>
@@ -65,11 +67,12 @@ export default function MonthCalendar({ events, onSelectDate }: CalendarProps) {
           return (
             <button
               key={dateStr}
+              type="button"
               onClick={() => {
                 setSelectedDay(dateStr);
                 onSelectDate(dateStr);
               }}
-              className={`h-12 border border-slate-50 rounded-xl flex flex-col items-center justify-between py-1 transition-all ${
+              className={`h-12 border border-slate-50 rounded-xl flex flex-col items-center justify-between py-1 transition-all active:scale-95 ${
                 isSelected ? 'ring-2 ring-teal-600 bg-teal-50/30' : 'hover:bg-slate-50'
               }`}
             >
