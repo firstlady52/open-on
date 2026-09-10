@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EventItem } from '@/types';
 
 interface CalendarProps {
@@ -9,12 +9,37 @@ interface CalendarProps {
 }
 
 export default function MonthCalendar({ events, onSelectDate }: CalendarProps) {
-  const [selectedDay, setSelectedDay] = useState('2026-09-10');
+  const [selectedDay, setSelectedDay] = useState('');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // 2026년 9월 일수 (30일)
-  const daysInMonth = Array.from({ length: 30 }, (_, i) => {
+  // 앱 실행 시 오늘 날짜로 초기화
+  useEffect(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    setSelectedDay(todayStr);
+    setCurrentDate(today);
+  }, []);
+
+  // 달력을 그리기 위한 날짜 계산
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth(); // 0부터 시작 (8 = 9월)
+
+  // 이번 달 1일이 무슨 요일인지 계산 (0: 일요일 ~ 6: 토요일)
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  
+  // 이번 달이 며칠까지 있는지 계산 (예: 9월은 30일)
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // 1일이 시작하기 전까지의 빈 칸 배열
+  const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+
+  // 이번 달의 실제 날짜 배열
+  const days = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
-    const dateStr = `2026-09-${day.toString().padStart(2, '0')}`;
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return { day, dateStr };
   });
 
@@ -37,16 +62,31 @@ export default function MonthCalendar({ events, onSelectDate }: CalendarProps) {
     }
   };
 
+  // '오늘' 버튼 클릭 시
+  const handleTodayClick = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    
+    setCurrentDate(today);
+    setSelectedDay(todayStr);
+    onSelectDate(todayStr);
+  };
+
+  // 클라이언트 렌더링 전 빈 화면 방지
+  if (!selectedDay) return <div className="h-64 animate-pulse bg-slate-50 rounded-xl"></div>;
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4 px-2">
-        <span className="text-sm font-bold text-slate-800">&lt; 2026년 9월 &gt;</span>
+        <span className="text-sm font-bold text-slate-800">
+          &lt; {year}년 {month + 1}월 &gt;
+        </span>
         <button
           type="button"
-          onClick={() => {
-            setSelectedDay('2026-09-10');
-            onSelectDate('2026-09-10');
-          }}
+          onClick={handleTodayClick}
           className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg font-medium active:scale-95 transition-transform"
         >
           오늘
@@ -60,10 +100,16 @@ export default function MonthCalendar({ events, onSelectDate }: CalendarProps) {
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {daysInMonth.map(({ day, dateStr }) => {
+        {/* 1일 이전의 빈 칸 그리기 */}
+        {blanks.map((_, i) => (
+          <div key={`blank-${i}`} className="h-12"></div>
+        ))}
+
+        {/* 실제 날짜 그리기 */}
+        {days.map(({ day, dateStr }) => {
           const dayEvents = getDotsForDate(dateStr);
           const isSelected = dateStr === selectedDay;
-
+          
           return (
             <button
               key={dateStr}
@@ -72,8 +118,10 @@ export default function MonthCalendar({ events, onSelectDate }: CalendarProps) {
                 setSelectedDay(dateStr);
                 onSelectDate(dateStr);
               }}
-              className={`h-12 border border-slate-50 rounded-xl flex flex-col items-center justify-between py-1 transition-all active:scale-95 ${
-                isSelected ? 'ring-2 ring-teal-600 bg-teal-50/30' : 'hover:bg-slate-50'
+              className={`h-12 border rounded-xl flex flex-col items-center justify-between py-1 transition-all active:scale-95 ${
+                isSelected 
+                  ? 'border-teal-600 bg-teal-50/30 ring-1 ring-teal-600' 
+                  : 'border-slate-50 hover:bg-slate-50'
               }`}
             >
               <span className={`text-xs ${isSelected ? 'font-bold text-teal-800' : 'text-slate-700'}`}>
